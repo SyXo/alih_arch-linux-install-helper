@@ -1,7 +1,7 @@
 #ALIH (Arch Linux Install Helper)
 #By KlausDevWalker
-#Version: 0.0.3
-#Release Date: August 26th, 2019
+#Version: 0.0.4
+#Release Date: August 27th, 2019
 
 #Set keyboard layout
 loadkeys $br-abnt2

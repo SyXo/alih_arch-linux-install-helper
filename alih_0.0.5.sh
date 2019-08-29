@@ -1,7 +1,7 @@
 #ALIH (Arch Linux Install Helper)
 #By KlausDevWalker
-#Version: 0.0.3
-#Release Date: August 26th, 2019
+#Version: 0.0.5
+#Release Date: August 27th, 2019
 
 #Set keyboard layout
 loadkeys $br-abnt2
@@ -59,7 +59,7 @@ nano /etc/locale.gen
 locale-gen
 
 #If keyboard layout was set, made it persistent
-KEYMAP=$br-abnt2
+KEYMAP=$br-abnt2 >> /etc/vconsole.conf
 
 #Create hostname file and put your machine "name"
 echo "$my-hostname" >> /etc/hostname
@@ -94,28 +94,45 @@ exit
 #Reboot to finish installation
 reboot
 
+
+
 #AFTER INSTALLATION
 
-#Add a user and password
+#Login with root user (only user available in first boot)
+root
+$root-password
+
+#If keyboard map reverted back to default (us), change and make it persistent
+localectl set-keymap --no-convert $br-abnt2
+
+#Add an user and a password for this account 
 useradd -m $my-username
 passwd $my-username
 
-#Discover interface's name
-ip link
+#Add that user to some important groups
+usermod -a -G adm,wheel,sys,users,lp,network,power $my-username
 
-#Activate network interface and check it for errors
-ip link set $interface-name up && ip link
+#(Optionally) change default CLI text editor to nano
+export EDITOR="nano"
 
-#Start and enable wpa_supplicant
-systemctl start wpa_supplicant && systemctl enable wpa_supplicant
+#Enter 'visudo' command and add user below 'root ALL=(ALL) ALL' and save it
+$my-username ALL=(ALL) ALL
 
-#Encrypt the passphrase && use config file for wpa_cli (wireless network)
-wpa_passphrase $MY-ESSID $MY-PASSPHRASE > /etc/wpa_supplicant/$MY-ESSID.conf
-wpa_applicant -c /etc/wpa_supplicant/$MY-ESSID.conf -i $my-interface-name
-wpa_applicant -B -c /etc/wpa_supplicant/$MY-ESSID.conf -i $my-interface-name
+#Reboot the system
+reboot
 
-#Start and enable dhcp service to obtain an IP
-systemctl start dhcpcd && systemctl enable dhcpcd
+#Enter user login credentials
+> $my-username
+> $my-user-password
 
+#RIGHT NOW I COULDN'T PUT WIRELESS NETWORK TO WORK AFTER A RESTART.
+#THE FOLLOWING WORKS WHILE THE SESSION IS RUNNING:
+#
+#Test connection to a known wireless connection (Control + C to stop)
+sudo su -c 'wpa_supplicant -i wlp1s0 -c <(wpa_passphrase $my-ssid $my-passphrase)'
+#
+#Enable wireless connection to run in background
+sudo su -c 'wpa_supplicant -i wlp1s0 -c <(wpa_passphrase $my-ssid $my-passphrase) -B'
+#
+#UNTIL I FIGURE IT OUT, I'll BE EDITING THE GUIDE WITH OTHER ESSENCIAL THINGS
 
-wpa_supplicant -i wlp1s0 -c <(wpa_passphrase FERREIRA klauseday) -B
